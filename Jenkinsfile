@@ -122,7 +122,7 @@ pipeline {
                         }
                     }
 
-                    if (env.BRANCH_NAME == "develop") {
+                    else if (env.BRANCH_NAME == "develop") {
                         withCredentials([usernamePassword(
                             credentialsId: 'docker-cred',
                             usernameVariable: 'DOCKER_USER',
@@ -142,7 +142,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                     if (env.BRANCH_NAME == "main") {
+                     if (env.BRANCH_NAME == "master") {
                         sh '''
                             ssh -o StrictHostKeyChecking=no ubuntu@169.32.0.205 \
                             "docker pull kosaraju333/${DOCKER_IMAGE_PROD}:latest && \
