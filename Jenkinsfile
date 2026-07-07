@@ -67,11 +67,24 @@ pipeline {
         
         stage('Docker Build & Tag') {
             steps {
-                // This step should not normally be used in your script. Consult the inline help for details.
-                withDockerRegistry(credentialsId: 'docker-cred', url: 'https://index.docker.io/v1/') {
-                    // some block
-                    sh "docker build -t ${DOCKER_IMAGE} ."
+                script {
+                    if (env.BRANCH_NAME == "master") {
+                        // This step should not normally be used in your script. Consult the inline help for details.
+                        withDockerRegistry(credentialsId: 'docker-cred', url: 'https://index.docker.io/v1/') {
+                            // some block
+                            sh "docker build -t ${DOCKER_IMAGE_PROD} ."
+                        }
+                    } 
+
+                    if (env.BRANCH_NAME == "develop") {
+                        // This step should not normally be used in your script. Consult the inline help for details.
+                        withDockerRegistry(credentialsId: 'docker-cred', url: 'https://index.docker.io/v1/') {
+                            // some block
+                            sh "docker build -t ${DOCKER_IMAGE_DEV} ."
+                        }
+                    }    
                 }
+                
             }
         }
         
