@@ -122,7 +122,7 @@ pipeline {
                         }
                     }
 
-                    if (env.BRANCH_NAME == "develop") {
+                    else if (env.BRANCH_NAME == "develop") {
                         withCredentials([usernamePassword(
                             credentialsId: 'docker-cred',
                             usernameVariable: 'DOCKER_USER',
@@ -142,13 +142,13 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                     if (env.BRANCH_NAME == "main") {
+                     if (env.BRANCH_NAME == "master") {
                         sh '''
                             ssh -o StrictHostKeyChecking=no ubuntu@169.32.0.205 \
                             "docker pull kosaraju333/${DOCKER_IMAGE_PROD}:latest && \
-                            docker stop ${DOCKER_IMAGE_PROD} || true && \
-                            docker rm ${DOCKER_IMAGE_PROD} || true && \
-                            docker run -d --name ${CONTAINER_NAME_DEV} -p 80:8080 ${DOCKER_IMAGE_PROD}"
+                            docker stop ${CONTAINER_NAME_PROD} || true && \
+                            docker rm ${CONTAINER_NAME_PROD} || true && \
+                            docker run -d --name ${CONTAINER_NAME_PROD} -p 80:8080 ${DOCKER_IMAGE_PROD}"
                         '''
                     }
 
@@ -156,8 +156,8 @@ pipeline {
                         sh '''
                             ssh -o StrictHostKeyChecking=no ubuntu@169.32.0.205 \
                             "docker pull kosaraju333/${DOCKER_IMAGE_DEV}:latest && \
-                            docker stop ${DOCKER_IMAGE_DEV} || true && \
-                            docker rm ${DOCKER_IMAGE_DEV} || true && \
+                            docker stop ${CONTAINER_NAME_DEV} || true && \
+                            docker rm ${CONTAINER_NAME_DEV} || true && \
                             docker run -d --name ${CONTAINER_NAME_DEV} -p 90:8080 ${DOCKER_IMAGE_DEV}"
                         '''
                     }
