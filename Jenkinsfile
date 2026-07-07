@@ -146,7 +146,7 @@ pipeline {
                             "docker pull kosaraju333/${DOCKER_IMAGE_PROD}:latest && \
                             docker stop ${DOCKER_IMAGE_PROD} || true && \
                             docker rm ${DOCKER_IMAGE_PROD} || true && \
-                            docker run -d --name ${DOCKER_IMAGE_PROD} -p 80:8080 kosaraju333/${DOCKER_IMAGE_PROD}:latest"
+                            docker run -d --name ${DOCKER_IMAGE_PROD} -p 80:8080 kosaraju333/${DOCKER_IMAGE_PROD}"
                         '''
                     }
 
@@ -156,7 +156,7 @@ pipeline {
                             "docker pull kosaraju333/${DOCKER_IMAGE_DEV}:latest && \
                             docker stop ${DOCKER_IMAGE_DEV} || true && \
                             docker rm ${DOCKER_IMAGE_DEV} || true && \
-                            docker run -d --name ${DOCKER_IMAGE_DEV} -p 90:8080 kosaraju333/${DOCKER_IMAGE_DEV}:latest"
+                            docker run -d --name ${DOCKER_IMAGE_DEV} -p 90:8080 kosaraju333/${DOCKER_IMAGE_DEV}"
                         '''
                     }
                 }
