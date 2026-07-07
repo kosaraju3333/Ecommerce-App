@@ -94,13 +94,13 @@ pipeline {
             steps {
                 script {
                     if (env.BRANCH_NAME == "master") {
-                        sh "trivy image --format table -o trivy-image-report.html ${DOCKER_IMAGE_PROD}"
-                        archiveArtifacts artifacts: 'trivy-image-report.html', fingerprint: true
+                        sh "trivy image --format table -o trivy-image-report-${env.BRANCH_NAME}.html ${DOCKER_IMAGE_PROD}"
+                        archiveArtifacts artifacts: 'trivy-image-report-${env.BRANCH_NAME}.html', fingerprint: true
                     }
 
                     else if (env.BRANCH_NAME == "develop") {
-                        sh "trivy image --format table -o trivy-image-report.html ${DOCKER_IMAGE_DEV}"
-                        archiveArtifacts artifacts: 'trivy-image-report.html', fingerprint: true
+                        sh "trivy image --format table -o trivy-image-report-${env.BRANCH_NAME}.html ${DOCKER_IMAGE_DEV}"
+                        archiveArtifacts artifacts: 'trivy-image-report-${env.BRANCH_NAME}.html', fingerprint: true
                     }
                 }
             }
