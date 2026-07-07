@@ -96,15 +96,28 @@ pipeline {
             }
         }
         
-        stage('Deploy to Container') {
+        stage('Deploy') {
             steps {
-                script {
-                    sh "docker stop ecommerce-app-container || true && docker rm ecommerce-app-container || true"
-                    sh "docker run -d --name ecommerce-app-container -p 8083:8080 ${DOCKER_IMAGE}"
-                }
+                sh '''
+                    ssh -o StrictHostKeyChecking=no ubuntu@169.32.0.205 \
+                    "docker pull kosaraju333/ecommerce-app:latest && \
+                     docker stop ecommerce-app || true && \
+                     docker rm ecommerce-app || true && \
+                     docker run -d --name ecommerce-app -p 80:8080 kosaraju333/ecommerce-app:latest"
+                '''
             }
         }
     }
+        
+    //     stage('Deploy to Container') {
+    //         steps {
+    //             script {
+    //                 sh "docker stop ecommerce-app-container || true && docker rm ecommerce-app-container || true"
+    //                 sh "docker run -d --name ecommerce-app-container -p 8083:8080 ${DOCKER_IMAGE}"
+    //             }
+    //         }
+    //     }
+    // }
     
     post {
         always {
@@ -115,6 +128,7 @@ pipeline {
             )
         }
     }
+}
     
     // post {
     //     always {
@@ -155,4 +169,4 @@ pipeline {
     //         }
     //     }
     // }
-}
+// }
