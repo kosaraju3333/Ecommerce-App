@@ -9,6 +9,8 @@ pipeline {
         SCANNER_HOME = tool 'sonar-scanner'
         DOCKER_IMAGE_PROD = "kosaraju333/ecommerce-app-prod:latest"
         DOCKER_IMAGE_DEV = "kosaraju333/ecommerce-app-dev:latest"
+        CONTAINER_NAME_PROD = "ecommerce-app-prod"
+        CONTAINER_NAME_DEV = "ecommerce-app-dev"
     }
     
     stages {
@@ -67,11 +69,24 @@ pipeline {
         
         stage('Docker Build & Tag') {
             steps {
-                // This step should not normally be used in your script. Consult the inline help for details.
-                withDockerRegistry(credentialsId: 'docker-cred', url: 'https://index.docker.io/v1/') {
-                    // some block
-                    sh "docker build -t ${DOCKER_IMAGE} ."
+                script {
+                    if (env.BRANCH_NAME == "master") {
+                        // This step should not normally be used in your script. Consult the inline help for details.
+                        withDockerRegistry(credentialsId: 'docker-cred', url: 'https://index.docker.io/v1/') {
+                            // some block
+                            sh "docker build -t ${DOCKER_IMAGE_PROD} ."
+                        }
+                    } 
+
+                    if (env.BRANCH_NAME == "develop") {
+                        // This step should not normally be used in your script. Consult the inline help for details.
+                        withDockerRegistry(credentialsId: 'docker-cred', url: 'https://index.docker.io/v1/') {
+                            // some block
+                            sh "docker build -t ${DOCKER_IMAGE_DEV} ."
+                        }
+                    }    
                 }
+                
             }
         }
         
@@ -131,9 +146,9 @@ pipeline {
                         sh '''
                             ssh -o StrictHostKeyChecking=no ubuntu@169.32.0.205 \
                             "docker pull kosaraju333/${DOCKER_IMAGE_PROD}:latest && \
-                            docker stop ${DOCKER_IMAGE_PROD} || true && \
-                            docker rm ${DOCKER_IMAGE_PROD} || true && \
-                            docker run -d --name ${DOCKER_IMAGE_PROD} -p 80:8080 kosaraju333/${DOCKER_IMAGE_PROD}:latest"
+                            docker stop ${CONTAINER_NAME_PROD} || true && \
+                            docker rm ${CONTAINER_NAME_PROD} || true && \
+                            docker run -d --name ${CONTAINER_NAME_PROD} -p 80:8080 ${DOCKER_IMAGE_PROD}"
                         '''
                     }
 
@@ -141,9 +156,9 @@ pipeline {
                         sh '''
                             ssh -o StrictHostKeyChecking=no ubuntu@169.32.0.205 \
                             "docker pull kosaraju333/${DOCKER_IMAGE_DEV}:latest && \
-                            docker stop ${DOCKER_IMAGE_DEV} || true && \
-                            docker rm ${DOCKER_IMAGE_DEV} || true && \
-                            docker run -d --name ${DOCKER_IMAGE_DEV} -p 90:8080 kosaraju333/${DOCKER_IMAGE_DEV}:latest"
+                            docker stop ${CONTAINER_NAME_DEV} || true && \
+                            docker rm ${CONTAINER_NAME_DEV} || true && \
+                            docker run -d --name ${CONTAINER_NAME_DEV} -p 90:8080 ${DOCKER_IMAGE_DEV}"
                         '''
                     }
                 }
