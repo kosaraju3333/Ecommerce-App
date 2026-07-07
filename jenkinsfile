@@ -7,7 +7,8 @@ pipeline {
     }
     environment {
         SCANNER_HOME = tool 'sonar-scanner'
-        DOCKER_IMAGE = "kosaraju333/ecommerce-app:latest"
+        DOCKER_IMAGE_PROD = "kosaraju333/ecommerce-app-prod:latest"
+        DOCKER_IMAGE_DEV = "kosaraju333/ecommerce-app-dev:latest"
     }
     
     stages {
@@ -76,35 +77,77 @@ pipeline {
         
         stage('Docker Image Scan') {
             steps {
-                sh "trivy image --format table -o trivy-image-report.html ${DOCKER_IMAGE}"
-                archiveArtifacts artifacts: 'trivy-image-report.html', fingerprint: true
+                script {
+                    if (env.BRANCH_NAME == "master") {
+                        sh "trivy image --format table -o trivy-image-report.html ${DOCKER_IMAGE_PROD}"
+                        archiveArtifacts artifacts: 'trivy-image-report.html', fingerprint: true
+                    }
+
+                    else if (env.BRANCH_NAME == "develop") {
+                        sh "trivy image --format table -o trivy-image-report.html ${DOCKER_IMAGE_DEV}"
+                        archiveArtifacts artifacts: 'trivy-image-report.html', fingerprint: true
+                    }
+                }
             }
         }
         
         stage('Push Docker Image') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'docker-cred',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    sh '''
-                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                        docker push ${DOCKER_IMAGE}
-                    '''
+                script {
+                    if (env.BRANCH_NAME == "master") {
+                        withCredentials([usernamePassword(
+                            credentialsId: 'docker-cred',
+                            usernameVariable: 'DOCKER_USER',
+                            passwordVariable: 'DOCKER_PASS'
+                        )]) {
+                            sh '''
+                                echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                                docker push ${DOCKER_IMAGE_PROD}
+                            '''
+                        }
+                    }
+
+                    if (env.BRANCH_NAME == "develop") {
+                        withCredentials([usernamePassword(
+                            credentialsId: 'docker-cred',
+                            usernameVariable: 'DOCKER_USER',
+                            passwordVariable: 'DOCKER_PASS'
+                        )]) {
+                            sh '''
+                                echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                                docker push ${DOCKER_IMAGE_DEV}
+                            '''
+                        }
+                    }
                 }
+                
             }
         }
         
         stage('Deploy') {
             steps {
-                sh '''
-                    ssh -o StrictHostKeyChecking=no ubuntu@169.32.0.205 \
-                    "docker pull kosaraju333/ecommerce-app:latest && \
-                     docker stop ecommerce-app || true && \
-                     docker rm ecommerce-app || true && \
-                     docker run -d --name ecommerce-app -p 80:8080 kosaraju333/ecommerce-app:latest"
-                '''
+                script {
+                     if (env.BRANCH_NAME == "main") {
+                        sh '''
+                            ssh -o StrictHostKeyChecking=no ubuntu@169.32.0.205 \
+                            "docker pull kosaraju333/${DOCKER_IMAGE_PROD}:latest && \
+                            docker stop ${DOCKER_IMAGE_PROD} || true && \
+                            docker rm ${DOCKER_IMAGE_PROD} || true && \
+                            docker run -d --name ${DOCKER_IMAGE_PROD} -p 80:8080 kosaraju333/${DOCKER_IMAGE_PROD}:latest"
+                        '''
+                    }
+
+                     else if (env.BRANCH_NAME == "develop") {
+                        sh '''
+                            ssh -o StrictHostKeyChecking=no ubuntu@169.32.0.205 \
+                            "docker pull kosaraju333/${DOCKER_IMAGE_DEV}:latest && \
+                            docker stop ${DOCKER_IMAGE_DEV} || true && \
+                            docker rm ${DOCKER_IMAGE_DEV} || true && \
+                            docker run -d --name ${DOCKER_IMAGE_DEV} -p 90:8080 kosaraju333/${DOCKER_IMAGE_DEV}:latest"
+                        '''
+                    }
+                }
+                
             }
         }
     }
